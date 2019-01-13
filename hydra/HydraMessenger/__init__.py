@@ -66,8 +66,6 @@ class HydraProxy(Process):
 
         frontend.bind("tcp://{host}:{port}".format(host=self.frontend_host,
                                                    port=self.frontend_port))
-        frontend_stream = ZMQStream(frontend)
-        frontend_stream.on_recv(self.frontend_on_recv)
 
         # Socket facing servers
         backend = context.socket(zmq.XREQ)
@@ -80,8 +78,6 @@ class HydraProxy(Process):
 
         backend.bind("tcp://{host}:{port}".format(host=self.backend_host,
                                                   port=self.backend_port))
-        backend_stream = ZMQStream(backend)
-        backend_stream.on_recv(self.backend_on_recv)
 
         print("Proxy starting up\n")
 
@@ -92,48 +88,6 @@ class HydraProxy(Process):
         except Exception as e:
             print("ERROR: Proxy failed to start. : {}".format(e))
             exit(1)
-
-    def frontend_on_recv(self, msg):
-        message = msg
-        identity = message[0]
-
-        # self.parse_message(message=message)
-
-        self.frontend_identities[identity] = datetime.utcnow()
-
-        msg_type = msg[1]
-
-        # direct reader.
-        print("Received message of type %s from client ID %s!" % (msg_type, identity))
-        print("%s" % msg)
-
-    def backend_on_recv(self, msg):
-        message = msg
-        identity = message[0]
-
-        # self.parse_message(message=message)
-
-        self.backend_identities[identity] = datetime.utcnow()
-
-        msg_type = msg[1]
-
-        # direct reader.
-        print("Received message of type %s from client ID %s!" % (msg_type, identity))
-        print("%s" % msg)
-
-    def close_stale_connections(self, stale_clients):
-        for client_id, last_seen in self.client_identities.items():
-            if last_seen + timedelta(seconds=10) < datetime.utcnow():
-                stale_clients.append(client_id)
-            else:
-                pass
-                # msg = CommandMessage()
-                # msg.send(self.server, client_id)
-
-        for client_id in stale_clients:
-            print(
-                "Client %s has gone quiet. Dropping from list of connected clients." % client_id)
-            del self.client_identities[client_id]
 
 
 class HydraMessageWorker(Process):
