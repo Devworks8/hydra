@@ -1,0 +1,18 @@
+service:
+  proxy:
+    frontend:
+      host: '127.0.0.1'
+      port: 33907
+      crypto: false
+      zap: True
+    backend:
+      host: '127.0.0.1'
+      port: 33908
+      crypto: false
+      zap: True
+  messenger:
+    crypto: false
+    host: '127.0.0.1'
+    port: 33908
+    zap: false
+
