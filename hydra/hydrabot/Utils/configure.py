@@ -7,8 +7,8 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-from hydra.HydraBot.Utils.decorators import *
-from hydra.HydraBot.Utils.inflate_dict import inflate_dict
+from Utils.decorators import *
+from Utils.inflate_dict import inflate_dict
 
 
 # TODO: Finish error handling.
@@ -45,7 +45,6 @@ class CfgManager:
                 port: 33907
         views:
             client:
-                crypto: True
                 """
 
         return defaults

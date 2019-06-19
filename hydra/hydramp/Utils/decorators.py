@@ -2,7 +2,7 @@ import functools
 from collections import MutableMapping
 
 from deepmerge import always_merger
-from hydra.HydraMessenger.Utils.flatten_dict import flatten_dict as _flatten_dict
+from Utils.flatten_dict import flatten_dict as _flatten_dict
 
 
 def singleton(cls):

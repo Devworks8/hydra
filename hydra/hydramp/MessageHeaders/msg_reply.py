@@ -1,11 +1,8 @@
-from hydra.HydraMessenger.MessageHeaders.msg_core import *
-
-
 class CommandMessage(MultiPartMessage):
-    header = b'COMMAND'
+    header = b'REPLY'
 
-    def __init__(self):
-        self.message = 'message'
+    def __init__(self, message='END'):
+        self.message = message
 
     @property
     def msg(self):
@@ -13,6 +10,6 @@ class CommandMessage(MultiPartMessage):
 
     @classmethod
     def from_msg(cls, msg):
-        if len(msg) != 5 or msg[0] != cls.header:
+        if msg[0] != cls.header:
             return None
         return cls(msg[1].decode('utf-8'))

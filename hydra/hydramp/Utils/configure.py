@@ -7,8 +7,8 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-from hydra.HydraMessenger.Utils.decorators import *
-from hydra.HydraMessenger.Utils.inflate_dict import inflate_dict
+from Utils.decorators import *
+from Utils.inflate_dict import inflate_dict
 
 
 # TODO: Finish error handling.
@@ -48,10 +48,8 @@ class CfgManager:
                     host: '127.0.0.1'
                     port: 33908
             messenger:
-                crypto: false
                 host: '127.0.0.1'
                 port: 33908
-                zap: false
                 """
 
         return defaults

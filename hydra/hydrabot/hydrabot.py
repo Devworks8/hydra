@@ -1,9 +1,7 @@
-from argparse import ArgumentParser
-import sys
 import zmq
 
-from hydra.HydraBot.configure import CfgManager
-from hydra.HydraMessenger.Utils.key_monkey import *
+from Utils.configure import CfgManager
+from Utils.clireport import CLIReport
 
 
 def main():
@@ -16,9 +14,12 @@ def main():
     args = parser.parse_args()
     """
 
-    settings = CfgManager()
+    try:
+        settings = CfgManager()
+        reporter = CLIReport(settings=settings)
 
-    crypto = settings.get('service_client_crypto')[1]
+    except:
+        reporter.report('ERROR', 'Failed to parse settings.')
 
     frontend = "tcp://{}:{}".format(settings.get('service_proxy_host')[1],
                                     settings.get('service_proxy_port')[1])
@@ -27,13 +28,15 @@ def main():
     socket = context.socket(zmq.REQ)
     socket.setsockopt(zmq.LINGER, 0)
 
-    # setup crypto
-    if crypto:
-        keymonkey = KeyMonkey("Moonbase")
-        socket = keymonkey.setupClient(socket, frontend, "HydraProxyFrontend")
+    reporter.report('INFO','Connecting to {}'.format(frontend))
+    try:
+        socket.connect(frontend)
+        reporter.report('INFO', 'Connected.')
 
-    print("Connecting to {}".format(frontend))
-    socket.connect(frontend)
+    except:
+        reporter.report('ERROR',
+                        'Failed to connect to tcp://{}:{}.'.format(settings.get('service_proxy_frontend_host')[1],
+                                                                   settings.get('service_proxy_frontend_port')[1]))
 
     msgs = [b'1', b'2', b'3', b'4']
     while True:

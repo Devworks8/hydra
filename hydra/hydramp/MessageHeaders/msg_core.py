@@ -7,7 +7,7 @@ class MultiPartMessage(object):
 
     @property
     def msg(self):
-        return [b'src', b'dest', b'command', b'work']
+        return [self.header]
 
     def send(self, socket, identity=None):
         msg = self.msg
