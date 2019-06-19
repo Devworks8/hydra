@@ -80,7 +80,7 @@ class HydraMessenger(Process):
 
         try:
             self.reporter.report('INFO', 'Connecting to tcp://{host}:{port}.'.format(host=self.backend_host,
-                                                                                    port=self.backend_port))
+                                                                                     port=self.backend_port))
             worker.connect("tcp://{host}:{port}".format(host=self.backend_host, port=self.backend_port))
             self.reporter.report('INFO', 'Connected.')
 
@@ -93,8 +93,6 @@ class HydraMessenger(Process):
 
             if message:
                 self.validate_message(msg=message)
-
-        # results = HydraMessengerWorker(reporter=self.reporter, msg=message)
 
             worker.send_multipart(self.validate_message(message))
             print("Worker %s sending results" % self.identity)
