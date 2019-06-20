@@ -33,30 +33,32 @@ class HydraProxy(Process):
             frontend = context.socket(zmq.XREP)
             frontend.bind("tcp://{host}:{port}".format(host=self.frontend_host,
                                                        port=self.frontend_port))
-        except:
+        except Exception as err:
             self.reporter.report('ERROR',
-                                 'Frontend failed to bind to tcp://{host}:{port}'.format(host=self.frontend_host,
-                                                                                         port=self.frontend_port))
+                                 'Frontend failed to bind to tcp://{host}:{port}\n[{e}]'.format(host=self.frontend_host,
+                                                                                                port=self.frontend_port,
+                                                                                                e=err))
 
         try:
             # Socket facing servers
             backend = context.socket(zmq.XREQ)
             backend.bind("tcp://{host}:{port}".format(host=self.backend_host,
                                                       port=self.backend_port))
-        except:
+        except Exception as e:
             self.reporter.report('ERROR',
-                                 'Backend failed to bind to tcp://{host}:{port}'.format(host=self.backend_host,
-                                                                                        port=self.backend_port))
+                                 'Backend failed to bind to tcp://{host}:{port}\n[{e}'.format(host=self.backend_host,
+                                                                                              port=self.backend_port,
+                                                                                              e=err))
 
         try:
             zmq.proxy(frontend, backend)
 
-        except:
-            self.reporter.report('ERROR', 'Proxy failed to initialize.')
+        except Exception as err:
+            self.reporter.report('ERROR', 'Proxy failed to initialize.\n[{e}'.format(e=err))
 
 
 class HydraMessenger(Process):
-    def __init__(self, server=None, backend_port=None, reporter=None, settings=None):
+    def __init__(self, reporter=None, settings=None, server=None, backend_port=None):
         super().__init__()
         self.reporter = reporter
         self.settings = settings
@@ -84,9 +86,11 @@ class HydraMessenger(Process):
             worker.connect("tcp://{host}:{port}".format(host=self.backend_host, port=self.backend_port))
             self.reporter.report('INFO', 'Connected.')
 
-        except:
-            self.reporter.report('ERROR', 'Failed to connect to tcp://{host}:{port}.'.format(host=self.backend_host,
-                                                                                             port=self.backend_port))
+        except Exception as err:
+            self.reporter.report('ERROR',
+                                 'Failed to connect to tcp://{host}:{port}\n[{e}'.format(host=self.backend_host,
+                                                                                         port=self.backend_port,
+                                                                                         e=err))
 
         while True:
             message = worker.recv_multipart()
