@@ -57,7 +57,7 @@ class CLIShell(cmd2.Cmd):
               "TopLevel has attribute top_level_attr=%s" % (line, self.top_level_attr))
 
     def help_say(self):
-        print("This is a top level submenu. Options are qwe, asd, zxc")
+        print("This is a top level submenu. Options are ipy, settings, quit")
 
     def complete_say(self, text, line, begidx, endidx):
-        return [s for s in ['qwe', 'asd', 'zxc'] if s.startswith(text)]
+        return [s for s in ['ipy', 'settings', 'quit'] if s.startswith(text)]

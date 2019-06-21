@@ -1,4 +1,4 @@
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 from random import randint
 import os
 from time import sleep
@@ -9,26 +9,42 @@ from Utils.configure import CfgManager
 from Utils.clireport import CLIReport
 from MessageHeaders.msg_command import CommandMessage
 from Shell.shell import CLIShell
+from HPlayer.hplayer import Player
 
 
 class HydraBot(Process):
-    def __init__(self, reporter=None, settings=None, server=None, backend_port=None):
+    def __init__(self, reporter=None, settings=None, player=None, host=None, port=None):
         super().__init__()
         self.reporter = reporter
         self.settings = settings
+        self.player = player
         self.command_message = CommandMessage()
         self.identity = "%04X-%04X" % (randint(0, 0x10000), randint(0, 0x10000))
-        self.backend_host = self.settings.get('service_proxy_backend_host')[1]
-        self.backend_port = self.settings.get('service_proxy_backend_port')[1]
+        self.host = self.settings.get('service_proxy_host')[1]
+        self.port = self.settings.get('service_proxy_port')[1]
+        self.msgs = Queue()
 
     def validate_message(self, msg):
         headers = [b'COMMAND', b'REPLY']
+        commands = [b'PLAY']
 
-        if msg[0] in headers:
-
-            return [b'REPLY', b'yep']
+        if msg[0] in headers and len(msg) > 1:
+            if msg[1] in commands:
+                return True
+            else:
+                return False
         else:
-            return [b'REPLY', b'nope']
+            return False
+
+    def send_cmd(self, msg, opt=None):
+        options = {'player': 'self.player.play()'}
+
+        if self.validate_message(msg=msg):
+            self.msgs.put(msg)
+            if opt in options:
+                eval(options[opt])
+        else:
+            print('invalid')
 
     def run(self):
         try:
@@ -57,10 +73,9 @@ class HydraBot(Process):
                                             port=settings.get('service_proxy_frontend_port')[1],
                                             e=err))
 
-        msgs = [b'1', b'2', b'3', b'4']
         while True:
-            for msg in msgs:
-                socket.send_multipart(msgs)
+            if not self.msgs.empty():
+                socket.send_multipart(self.msgs.get())
                 poller = zmq.Poller()
                 poller.register(socket, zmq.POLLIN)
                 if poller.poll(10 * 1000):
@@ -98,15 +113,19 @@ def main():
     # Load the reporter
     reporter = CLIReport(settings=settings)
 
+    # Load the player
+    player_proc = Player()
+    processes.append(player_proc)
+
     # Start the Client
-    client_proc = HydraBot(reporter=reporter, settings=settings)
+    client_proc = HydraBot(reporter=reporter, settings=settings, player=player_proc)
     client_proc.start()
     reporter.report('INFO', 'Client started.')
     processes.append(client_proc)
 
-    sleep(2)
+    sleep(1)
     # Start the shell
-    CLIShell(settings).cmdloop()
+    CLIShell(bot=client_proc, settings=settings).cmdloop()
 
 
 if __name__ == "__main__":

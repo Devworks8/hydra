@@ -1,10 +1,10 @@
 import sys
 from cmd2 import cmd2, with_argument_list
 import cmd2_submenu
-from IPython import embed
 
 
 SETTINGS = None
+BOT = None
 
 
 class SettingsSM(cmd2.Cmd):
@@ -16,7 +16,7 @@ class SettingsSM(cmd2.Cmd):
         self.top_level_attr = None
         self.settings_level_attr = 100000200
 
-    def do_view(self, args):
+    def do_view(self, *args, **kwargs):
         global SETTINGS
         print(SETTINGS.show_config())
 
@@ -32,32 +32,53 @@ class SettingsSM(cmd2.Cmd):
         print("Save: Operation successfully completed.")
 
 
+class PlayerSM(cmd2.Cmd):
+    """Player controls."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.prompt = 'Player '
+        self.top_level_attr = None
+        self.player_level_attr = 100000300
+
+    def do_play(self, *args, **kwargs):
+        global BOT
+
+        BOT.send_cmd([b'COMMAND', b'PLAY'], opt='player')
+
+    def do_stop(self):
+        pass
+
+    def do_pause(self):
+        pass
+
+    def do_next(self):
+        pass
+
+    def do_prev(self):
+        pass
+
+
 @cmd2_submenu.AddSubmenu(SettingsSM(), command='settings', shared_attributes=dict(top_level_attr='hydra_level_attr'))
+@cmd2_submenu.AddSubmenu(PlayerSM(), command='player', shared_attributes=dict(top_level_attr='hydra_level_attr'))
 class CLIShell(cmd2.Cmd):
     """To be used as the main / top level command class that will contain other submenus."""
 
-    def __init__(self, settings, *args, **kwargs):
+    def __init__(self, bot, settings, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.prompt = 'Hydra >>'
         self.hydra_level_attr = 100000100
+        global BOT
+        BOT = bot
         global SETTINGS
         SETTINGS = settings
-
-    def do_ipy(self, arg):
-        """Enters an interactive IPython shell.
-        Run python code from external files with ``run filename.py``
-        End with ``Ctrl-D`` (Unix) / ``Ctrl-Z`` (Windows), ``quit()``, '`exit()``.
-        """
-        banner = 'Entering an embedded IPython shell type quit() or <Ctrl>-d to exit ...'
-        exit_msg = 'Leaving IPython, back to {}'.format(sys.argv[0])
-        embed(banner1=banner, exit_msg=exit_msg)
 
     def do_say(self, line):
         print("You called a command in TopLevel with '%s'. "
               "TopLevel has attribute top_level_attr=%s" % (line, self.top_level_attr))
 
     def help_say(self):
-        print("This is a top level submenu. Options are qwe, asd, zxc")
+        print("This is a top level submenu. Options are settings, quit")
 
     def complete_say(self, text, line, begidx, endidx):
-        return [s for s in ['qwe', 'asd', 'zxc'] if s.startswith(text)]
+        return [s for s in ['settings', 'quit'] if s.startswith(text)]
+

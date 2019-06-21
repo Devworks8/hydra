@@ -9,6 +9,7 @@ from Utils.configure import CfgManager
 from MessageHeaders.msg_command import CommandMessage
 from Shell.shell import CLIShell
 from Utils.clireport import CLIReport
+from HStreamer.hstreamer import streamer
 
 
 class HydraProxy(Process):
@@ -69,12 +70,15 @@ class HydraMessenger(Process):
 
     def validate_message(self, msg):
         headers = [b'COMMAND', b'REPLY']
+        commands = [b'PLAY']
 
-        if msg[0] in headers:
-
-            return [b'REPLY', b'yep']
+        if msg[0] in headers and len(msg) > 1:
+            if msg[1] in commands:
+                return True
+            else:
+                return False
         else:
-            return [b'REPLY', b'nope']
+            return False
 
     def run(self):
         context = zmq.Context()
@@ -94,13 +98,11 @@ class HydraMessenger(Process):
 
         while True:
             message = worker.recv_multipart()
-
-            if message:
-                self.validate_message(msg=message)
-
-            worker.send_multipart(self.validate_message(message))
-            print("Worker %s sending results" % self.identity)
-            print(message)
+            # TODO: It receives the message correctly. I just need to parse it.
+            if self.validate_message(msg=message):
+                worker.send_multipart(self.validate_message(message))
+                print("Worker %s sending results" % self.identity)
+                print(message)
 
 
 processes = []
@@ -160,9 +162,9 @@ def main():
     reporter.report('INFO', 'Messenger started.')
     processes.append(messenger_proc)
 
-    sleep(2)
+    sleep(1)
     # Start the shell
-    CLIShell(settings).cmdloop()
+    CLIShell(settings=settings).cmdloop()
 
 
 if __name__ == '__main__':
